@@ -1,15 +1,11 @@
-import { AuthForm } from "./_components/auth-form";
+import { LoginPage } from "./LoginPage";
 
-interface LoginPageProps {
+interface LoginRoutePageProps {
   searchParams: Promise<{ message?: string }>;
 }
 
-export default async function LoginPage({ searchParams }: LoginPageProps) {
+export default async function LoginRoutePage({ searchParams }: LoginRoutePageProps) {
   const { message } = await searchParams;
 
-  return (
-    <main className="flex min-h-screen items-center justify-center bg-muted/30 p-4">
-      <AuthForm initialMessage={message} />
-    </main>
-  );
+  return <LoginPage initialMessage={message} />;
 }

@@ -28,7 +28,7 @@ signOutAction - Server action in `src/app/dashboard/actions.ts` for logout via S
 
 ## Components
 
-AuthForm - Client auth form in `src/app/login/_components/auth-form.tsx` for email/password sign in and sign up with email confirmation.
+LoginPage - Client login page component in `src/app/login/LoginPage.tsx` for email/password sign in, sign up, and email confirmation resend.
 Alert - shadcn UI alert component in `src/components/ui/Alert.tsx` for status and error messages.
 Button - shadcn UI button component in `src/components/ui/Button.tsx` with variants and `asChild` support.
 Card - shadcn UI card primitives in `src/components/ui/Card.tsx` for structured content blocks.
@@ -40,3 +40,4 @@ Form - shadcn form primitives in `src/components/ui/Form.tsx` built on `react-ho
 ## Proxy
 
 proxy - Request proxy function in `proxy.ts` that applies session updates and route protection.
+
