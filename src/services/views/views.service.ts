@@ -1,9 +1,9 @@
-import { prisma } from "@/lib/prisma";
+import { prismaRls } from "@/lib/prisma-rls";
 import { GridEntityType } from "@prisma/client";
 import { CreateViewInput, UpdateViewInput } from "@/shared/types/Views.interface";
 
 export async function getUserViews(userId: string, entityType?: GridEntityType) {
-  return prisma.view.findMany({
+  return prismaRls.view.findMany({
     where: {
       userId,
       ...(entityType ? { entityType } : {}),
@@ -15,7 +15,7 @@ export async function getUserViews(userId: string, entityType?: GridEntityType) 
 }
 
 export async function getUserViewById(userId: string, id: string) {
-  return prisma.view.findFirst({
+  return prismaRls.view.findFirst({
     where: {
       id,
       userId,
@@ -24,7 +24,7 @@ export async function getUserViewById(userId: string, id: string) {
 }
 
 export async function createUserView(input: CreateViewInput) {
-  return prisma.view.create({
+  return prismaRls.view.create({
     data: {
       userId: input.userId,
       name: input.name,
@@ -41,7 +41,7 @@ export async function updateUserView(
   id: string,
   input: UpdateViewInput,
 ) {
-  return prisma.view.updateMany({
+  return prismaRls.view.updateMany({
     where: {
       id,
       userId,
@@ -51,7 +51,7 @@ export async function updateUserView(
 }
 
 export async function deleteUserView(userId: string, id: string) {
-  return prisma.view.deleteMany({
+  return prismaRls.view.deleteMany({
     where: {
       id,
       userId,

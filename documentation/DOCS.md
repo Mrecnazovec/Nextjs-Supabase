@@ -2,6 +2,7 @@
 
 cn - Utility from `src/lib/utils.ts` that merges conditional class names with Tailwind conflict resolution.
 prisma - Shared PrismaClient singleton from `src/lib/prisma.ts` for server-side Prisma access.
+prismaRls - PrismaClient singleton from `src/lib/prisma-rls.ts` that prefers `DATABASE_URL_RLS` for RLS-safe `views` queries.
 SUPABASE_URL/SUPABASE_PUBLISHABLE_KEY - Environment helpers from `src/lib/supabase/env.ts` for Supabase URL and public key validation.
 createClient (browser) - Factory from `src/lib/supabase/client.ts` that creates a client-side Supabase instance.
 createClient (server) - Factory from `src/lib/supabase/server.ts` that creates a server-side Supabase client bound to Next.js cookies.
@@ -14,9 +15,12 @@ signUpWithEmail/signInWithEmail/resendSignUpConfirmation - Auth service methods 
 getCurrentUser/getCurrentUserFromClient - Profile service helpers from `src/services/profile/profile.service.ts` for retrieving authenticated Supabase user.
 getDashboardStats - Dashboard service method from `src/services/dashboard/dashboard.service.ts` that returns orders/invoices/views counters.
 parseGridListQuery/getPaginationParams - Grid query helpers from `src/services/grid/grid-query.service.ts` for server-side pagination and sorting parsing.
-getOrdersList - Orders service method from `src/services/orders/orders.service.ts` that returns paginated/sorted orders list.
-getInvoicesList - Invoices service method from `src/services/invoices/invoices.service.ts` that returns paginated/sorted invoices list.
+parseAgGridQuery - AG Grid request parser from `src/services/grid/grid-query.service.ts` for `startRow/endRow/sortModel/filterModel`.
+getGridRows - client grid API helper from `src/services/grid/grid-api.service.ts` for loading block rows from API.
+getOrdersGridData - Orders service method from `src/services/orders/orders.service.ts` that returns server-side filtered/sorted row blocks.
+getInvoicesGridData - Invoices service method from `src/services/invoices/invoices.service.ts` that returns server-side filtered/sorted row blocks.
 getUserViews/getUserViewById/createUserView/updateUserView/deleteUserView - Views service CRUD methods from `src/services/views/views.service.ts` with user-scoped access.
+getViews/createView/updateView/deleteView/toGridViewState - Views client API helpers from `src/services/views/views-api.service.ts` for view management UI.
 
 ## Shared enums
 
@@ -67,8 +71,15 @@ Input - shadcn UI input component in `src/components/ui/Input.tsx` for form fiel
 Label - shadcn UI label component in `src/components/ui/Label.tsx` for accessible form labels.
 Tabs - shadcn UI tabs components in `src/components/ui/Tabs.tsx` for mode switching (sign in/sign up).
 Form - shadcn form primitives in `src/components/ui/Form.tsx` built on `react-hook-form` for typed form fields and validation messages.
+Select - shadcn select primitives in `src/components/ui/Select.tsx` for view picker dropdown.
+Badge - shadcn badge component in `src/components/ui/Badge.tsx` for unsaved-changes indicator.
+AGGridTable - reusable grid component in `src/components/grid/AGGridTable.tsx` with server-side datasource and view CRUD controls.
 
 ## Proxy
 
 proxy - Request proxy function in `proxy.ts` that applies session updates and route protection.
+
+## Database Security
+
+views RLS migration - SQL policies in `prisma/migrations/20260305094000_add_views_rls/migration.sql` for `SELECT/INSERT/UPDATE/DELETE` limited to `auth.uid()`.
 

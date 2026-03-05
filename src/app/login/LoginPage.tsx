@@ -1,6 +1,5 @@
 "use client";
 
-import { Alert, AlertDescription } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import {
   Card,
@@ -11,6 +10,12 @@ import {
 } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/Tabs";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/Tooltip";
 import {
   Form,
   FormControl,
@@ -27,10 +32,12 @@ import {
 } from "@/services/auth/auth.service";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { PROTECTED_URL } from "@/config/url.config";
+import { API_URL } from "@/config/api.config";
 import { z } from "zod";
+import { toast } from "sonner";
 
 type Mode = "signin" | "signup";
 
@@ -51,9 +58,6 @@ export function LoginPage({ initialMessage }: LoginPageProps) {
 
   const [mode, setMode] = useState<Mode>("signin");
   const [isLoading, setIsLoading] = useState(false);
-  const [message, setMessage] = useState(initialMessage ?? "");
-  const [error, setError] = useState("");
-
   const form = useForm<AuthFormValues>({
     resolver: zodResolver(authSchema),
     defaultValues: {
@@ -62,9 +66,13 @@ export function LoginPage({ initialMessage }: LoginPageProps) {
     },
   });
 
+  useEffect(() => {
+    if (initialMessage) {
+      toast.info(initialMessage);
+    }
+  }, [initialMessage]);
+
   const handleAuth = async (values: AuthFormValues) => {
-    setError("");
-    setMessage("");
     setIsLoading(true);
 
     if (mode === "signup") {
@@ -75,12 +83,12 @@ export function LoginPage({ initialMessage }: LoginPageProps) {
       );
 
       if (signUpError) {
-        setError(signUpError.message);
+        toast.error(signUpError.message);
         setIsLoading(false);
         return;
       }
 
-      setMessage("Registration successful. Check your email to confirm your account.");
+      toast.success("Registration successful. Check your email.");
       setIsLoading(false);
       return;
     }
@@ -88,11 +96,17 @@ export function LoginPage({ initialMessage }: LoginPageProps) {
     const { error: signInError } = await signInWithEmail(supabase, values);
 
     if (signInError) {
-      setError(signInError.message);
+      toast.error(signInError.message);
       setIsLoading(false);
       return;
     }
 
+    await fetch(API_URL.authCacheRevalidate(), {
+      method: "POST",
+      cache: "no-store",
+    }).catch(() => undefined);
+
+    toast.success("Signed in successfully.");
     router.replace(PROTECTED_URL.dashboard());
     router.refresh();
     setIsLoading(false);
@@ -102,12 +116,10 @@ export function LoginPage({ initialMessage }: LoginPageProps) {
     const email = form.getValues("email");
 
     if (!email) {
-      setError("Enter email first, then click resend confirmation.");
+      toast.error("Enter email first.");
       return;
     }
 
-    setError("");
-    setMessage("");
     setIsLoading(true);
 
     const { error: resendError } = await resendSignUpConfirmation(
@@ -117,12 +129,12 @@ export function LoginPage({ initialMessage }: LoginPageProps) {
     );
 
     if (resendError) {
-      setError(resendError.message);
+      toast.error(resendError.message);
       setIsLoading(false);
       return;
     }
 
-    setMessage("A new confirmation email was sent.");
+    toast.success("Confirmation email sent.");
     setIsLoading(false);
   };
 
@@ -207,16 +219,21 @@ export function LoginPage({ initialMessage }: LoginPageProps) {
             </form>
           </Form>
 
-          {message ? (
-            <Alert>
-              <AlertDescription>{message}</AlertDescription>
-            </Alert>
-          ) : null}
-          {error ? (
-            <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          ) : null}
+          <TooltipProvider>
+            <div className="text-xs text-muted-foreground">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="cursor-help underline decoration-dotted underline-offset-2">
+                    Need help with confirmation emails?
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>
+                  Check spam folder and verify redirect URL in Supabase Auth settings.
+                </TooltipContent>
+              </Tooltip>
+            </div>
+          </TooltipProvider>
+
         </CardContent>
       </Card>
     </main>

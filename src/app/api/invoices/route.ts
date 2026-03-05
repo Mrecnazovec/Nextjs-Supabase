@@ -1,8 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import {
-  parseGridListQuery,
+  parseAgGridQuery,
 } from "@/services/grid/grid-query.service";
-import { getInvoicesList } from "@/services/invoices/invoices.service";
+import { getInvoicesGridData } from "@/services/invoices/invoices.service";
 import { InvoicesSortFieldEnum } from "@/shared/enums/InvoicesSortField.enum";
 import { SortDirectionEnum } from "@/shared/enums/SortDirection.enum";
 import { InvoicesSortField } from "@/shared/types/Invoices.interface";
@@ -16,13 +16,13 @@ const INVOICE_SORT_FIELDS: readonly InvoicesSortField[] = [
 ];
 
 export async function GET(request: NextRequest) {
-  const query = parseGridListQuery(request.nextUrl.searchParams, {
+  const query = parseAgGridQuery(request.nextUrl.searchParams, {
     allowedSortFields: INVOICE_SORT_FIELDS,
     defaultSortBy: InvoicesSortFieldEnum.INVOICE_DATE,
     defaultSortDirection: SortDirectionEnum.DESC,
-    defaultPageSize: 20,
+    defaultBlockSize: 100,
   });
 
-  const result = await getInvoicesList(query);
+  const result = await getInvoicesGridData(query);
   return NextResponse.json(result);
 }

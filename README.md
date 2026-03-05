@@ -34,7 +34,12 @@
   - `/api/dashboard`
   - `/api/register/confirm`
 - Prisma schema + migrations + seed для `orders` и `invoices`;
-- заполнение тестовых данных из `data/orders.json` и `data/invoices.json`.
+- заполнение тестовых данных из `data/orders.json` и `data/invoices.json`;
+- RLS policies для `views` через миграцию `prisma/migrations/20260305094000_add_views_rls/migration.sql`.
+
+Важно по RLS:
+- если runtime Prisma подключается ролью с `bypassrls` (например, `postgres`), policy может обходиться;
+- для strict-режима используйте `DATABASE_URL_RLS` с ролью без `bypassrls` (views-сервис в проекте использует его, если переменная задана).
 
 ## Структура конфигов роутов
 
@@ -61,6 +66,7 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY=...
 
 DATABASE_URL=...      # pooled/runtime
 DIRECT_URL=...        # direct/migrations
+DATABASE_URL_RLS=...  # optional: runtime URL with role without bypassrls (for views RLS)
 ```
 
 ## Установка и запуск
@@ -95,4 +101,3 @@ npm run build
 - реализовать generic `AGGridTable`;
 - добавить серверные API для AG-Grid sorting/filtering/pagination;
 - подключить страницы `/orders` и `/invoices` к реальным grid-данным.
-

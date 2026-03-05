@@ -11,9 +11,15 @@ export async function createClient() {
         return cookieStore.getAll();
       },
       setAll(cookiesToSet) {
-        cookiesToSet.forEach(({ name, value, options }) => {
-          cookieStore.set(name, value, options);
-        });
+        // In Server Components, cookies are read-only. Writes are handled in
+        // Route Handlers / Server Actions / proxy.ts.
+        try {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            cookieStore.set(name, value, options);
+          });
+        } catch {
+          // noop by design for read-only contexts
+        }
       },
     },
   });

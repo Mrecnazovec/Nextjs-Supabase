@@ -1,8 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import {
-  parseGridListQuery,
+  parseAgGridQuery,
 } from "@/services/grid/grid-query.service";
-import { getOrdersList } from "@/services/orders/orders.service";
+import { getOrdersGridData } from "@/services/orders/orders.service";
 import { OrdersSortFieldEnum } from "@/shared/enums/OrdersSortField.enum";
 import { SortDirectionEnum } from "@/shared/enums/SortDirection.enum";
 import { OrdersSortField } from "@/shared/types/Orders.interface";
@@ -16,13 +16,13 @@ const ORDER_SORT_FIELDS: readonly OrdersSortField[] = [
 ];
 
 export async function GET(request: NextRequest) {
-  const query = parseGridListQuery(request.nextUrl.searchParams, {
+  const query = parseAgGridQuery(request.nextUrl.searchParams, {
     allowedSortFields: ORDER_SORT_FIELDS,
     defaultSortBy: OrdersSortFieldEnum.ORDER_DATE,
     defaultSortDirection: SortDirectionEnum.DESC,
-    defaultPageSize: 20,
+    defaultBlockSize: 100,
   });
 
-  const result = await getOrdersList(query);
+  const result = await getOrdersGridData(query);
   return NextResponse.json(result);
 }

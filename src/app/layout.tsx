@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { SITE_AUTHOR, SITE_DESCRIPTION, SITE_KEYWORDS, SITE_NAME } from "@/constants/seo.constant";
+import NextTopLoader from "nextjs-toploader";
+import { Toaster } from "@/components/ui/Toaster";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,10 +16,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: SITE_NAME,
+  title: {
+    absolute: SITE_NAME,
+    template: `%s | ${SITE_NAME}`,
+  },
   description: SITE_DESCRIPTION,
   authors: SITE_AUTHOR,
-  keywords: SITE_KEYWORDS
+  keywords: SITE_KEYWORDS,
 };
 
 export default function RootLayout({
@@ -30,7 +35,11 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <NextTopLoader
+          showSpinner={false}
+        />
         {children}
+        <Toaster />
       </body>
     </html>
   );
