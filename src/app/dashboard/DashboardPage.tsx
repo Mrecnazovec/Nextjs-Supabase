@@ -1,16 +1,13 @@
 import { PROTECTED_URL, PUBLIC_URL } from "@/config/url.config";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
-import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/services/profile/profile.service";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { signOutAction } from "./actions";
 
 export async function DashboardPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   if (!user) {
     redirect(PUBLIC_URL.login());

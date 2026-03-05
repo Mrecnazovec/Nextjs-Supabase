@@ -1,7 +1,6 @@
 "use client";
 
 import { Alert, AlertDescription } from "@/components/ui/Alert";
-import { API_URL } from "@/config/api.config";
 import { Button } from "@/components/ui/Button";
 import {
   Card,
@@ -21,6 +20,11 @@ import {
   FormMessage,
 } from "@/components/ui/Form";
 import { createClient } from "@/lib/supabase/client";
+import {
+  resendSignUpConfirmation,
+  signInWithEmail,
+  signUpWithEmail,
+} from "@/services/auth/auth.service";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -64,12 +68,11 @@ export function LoginPage({ initialMessage }: LoginPageProps) {
     setIsLoading(true);
 
     if (mode === "signup") {
-      const redirectTo = `${window.location.origin}${API_URL.registerConfirm()}?next=${PROTECTED_URL.dashboard()}`;
-      const { error: signUpError } = await supabase.auth.signUp({
-        email: values.email,
-        password: values.password,
-        options: { emailRedirectTo: redirectTo },
-      });
+      const { error: signUpError } = await signUpWithEmail(
+        supabase,
+        values,
+        window.location.origin,
+      );
 
       if (signUpError) {
         setError(signUpError.message);
@@ -82,10 +85,7 @@ export function LoginPage({ initialMessage }: LoginPageProps) {
       return;
     }
 
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: values.email,
-      password: values.password,
-    });
+    const { error: signInError } = await signInWithEmail(supabase, values);
 
     if (signInError) {
       setError(signInError.message);
@@ -110,12 +110,11 @@ export function LoginPage({ initialMessage }: LoginPageProps) {
     setMessage("");
     setIsLoading(true);
 
-    const redirectTo = `${window.location.origin}${API_URL.registerConfirm()}?next=${PROTECTED_URL.dashboard()}`;
-    const { error: resendError } = await supabase.auth.resend({
-      type: "signup",
+    const { error: resendError } = await resendSignUpConfirmation(
+      supabase,
       email,
-      options: { emailRedirectTo: redirectTo },
-    });
+      window.location.origin,
+    );
 
     if (resendError) {
       setError(resendError.message);

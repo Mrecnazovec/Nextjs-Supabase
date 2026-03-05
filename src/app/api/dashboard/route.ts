@@ -1,26 +1,14 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/services/profile/profile.service";
+import { getDashboardStats } from "@/services/dashboard/dashboard.service";
 
 export async function GET() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   if (!user) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
-  const [orders, invoices, views] = await Promise.all([
-    prisma.order.count(),
-    prisma.invoice.count(),
-    prisma.view.count({ where: { userId: user.id } }),
-  ]);
-
-  return NextResponse.json({
-    orders,
-    invoices,
-    views,
-  });
+  const stats = await getDashboardStats(user.id);
+  return NextResponse.json(stats);
 }

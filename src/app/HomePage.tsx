@@ -1,12 +1,9 @@
 import { redirect } from "next/navigation";
 import { PROTECTED_URL, PUBLIC_URL } from "@/config/url.config";
-import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/services/profile/profile.service";
 
 export async function HomePage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   redirect(user ? PROTECTED_URL.dashboard() : PUBLIC_URL.login());
 

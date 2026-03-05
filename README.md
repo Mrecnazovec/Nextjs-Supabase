@@ -93,7 +93,6 @@ npm run build
 ## Ближайшие шаги
 
 - реализовать generic `AGGridTable`;
-- реализовать CRUD для `views` (save/save as/reset/dirty state);
 - добавить серверные API для AG-Grid sorting/filtering/pagination;
 - подключить страницы `/orders` и `/invoices` к реальным grid-данным.
 
