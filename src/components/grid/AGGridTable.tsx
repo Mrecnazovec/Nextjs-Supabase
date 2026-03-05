@@ -13,6 +13,7 @@ import {
   themeAlpine,
 } from "ag-grid-community";
 import { AgGridReact } from "ag-grid-react";
+import { Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ViewEntityTypeEnum } from "@/shared/enums/ViewEntityType.enum";
 import { GridViewState, UserView } from "@/shared/types/Views.interface";
@@ -30,7 +31,7 @@ import { AGGridTableHeader } from "./components/AGGridTableHeader";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
-interface AGGridTableProps<TRow extends object> {
+export interface AGGridTableProps<TRow extends object> {
   title: string;
   entityType: ViewEntityTypeEnum;
   dataEndpoint: string;
@@ -58,28 +59,43 @@ export function AGGridTable<TRow extends object>({
   const initialDataUsedRef = useRef(false);
   const ignoreDirtyChecksUntilRef = useRef(0);
   const pendingRequestsRef = useRef(0);
+  const latestRequestIdRef = useRef(0);
 
   const [views, setViews] = useState<UserView[]>([]);
+  const [isViewsLoading, setIsViewsLoading] = useState(true);
   const [selectedViewId, setSelectedViewId] = useState<string>(DEFAULT_VIEW_ID);
   const [isDirty, setIsDirty] = useState(false);
   const [isBusy, setIsBusy] = useState(false);
   const [isGridReady, setIsGridReady] = useState(false);
   const [isDataLoading, setIsDataLoading] = useState(false);
+  const [hasFirstDataRendered, setHasFirstDataRendered] = useState(false);
 
   const refreshViews = useCallback(async () => {
-    const data = await getViews(entityType);
-    setViews(data);
-    return data;
+    setIsViewsLoading(true);
+    try {
+      const data = await getViews(entityType);
+      setViews(data);
+      return data;
+    } finally {
+      setIsViewsLoading(false);
+    }
   }, [entityType]);
 
   useEffect(() => {
     let isActive = true;
 
-    void getViews(entityType).then((data) => {
-      if (isActive) {
-        setViews(data);
-      }
-    });
+    setIsViewsLoading(true);
+    void getViews(entityType)
+      .then((data) => {
+        if (isActive) {
+          setViews(data);
+        }
+      })
+      .finally(() => {
+        if (isActive) {
+          setIsViewsLoading(false);
+        }
+      });
 
     return () => {
       isActive = false;
@@ -168,6 +184,7 @@ export function AGGridTable<TRow extends object>({
 
   const dataSource = useMemo<IDatasource>(() => ({
     getRows: async (params: IGetRowsParams) => {
+      const requestId = ++latestRequestIdRef.current;
       const hasInitialData =
         Array.isArray(initialRows) &&
         typeof initialTotal === "number" &&
@@ -196,8 +213,16 @@ export function AGGridTable<TRow extends object>({
           filterModel: params.filterModel as Record<string, unknown>,
         });
 
+        // Ignore stale responses from older requests to avoid flicker/race conditions.
+        if (requestId !== latestRequestIdRef.current) {
+          return;
+        }
+
         params.successCallback(payload.rows, payload.total);
       } catch {
+        if (requestId !== latestRequestIdRef.current) {
+          return;
+        }
         params.failCallback();
       } finally {
         pendingRequestsRef.current = Math.max(pendingRequestsRef.current - 1, 0);
@@ -212,6 +237,7 @@ export function AGGridTable<TRow extends object>({
     gridApiRef.current = event.api;
     event.api.setGridOption("datasource", dataSource);
     setIsGridReady(true);
+    setHasFirstDataRendered(false);
 
     queueMicrotask(() => {
       const initialState = captureState(event.api);
@@ -263,9 +289,9 @@ export function AGGridTable<TRow extends object>({
       toast.success("View saved.");
     } catch {
       toast.error("Failed to save view.");
+    } finally {
+      setIsBusy(false);
     }
-
-    setIsBusy(false);
   }, [captureState, refreshViews, selectedViewId]);
 
   const handleSaveAsNew = useCallback(async (name: string) => {
@@ -322,28 +348,37 @@ export function AGGridTable<TRow extends object>({
       toast.success("View deleted.");
     } catch {
       toast.error("Failed to delete view.");
+    } finally {
+      setIsBusy(false);
     }
-
-    setIsBusy(false);
   }, [applyState, refreshViews, selectedViewId]);
 
   const handleResetToDefault = useCallback(() => {
     const api = gridApiRef.current;
 
-    if (!api || !defaultStateRef.current) {
+    if (!api) {
       return;
     }
 
-    setSelectedViewId(DEFAULT_VIEW_ID);
-    applyState(api, defaultStateRef.current);
-    toast.success("Reset to default view.");
-  }, [applyState]);
+    // Reset only filter state for the currently selected view and keep baseline unchanged,
+    // so grid state is marked as unsaved until user explicitly saves it.
+    isApplyingStateRef.current = true;
+    ignoreDirtyChecksUntilRef.current = Date.now() + 300;
+    api.setFilterModel({});
+    api.refreshInfiniteCache();
+    setTimeout(() => {
+      isApplyingStateRef.current = false;
+      setIsDirty(true);
+    }, 0);
+    toast.success("Filters reset.");
+  }, []);
 
   return (
     <div className="space-y-4">
       <AGGridTableHeader
         title={title}
         views={views}
+        isViewsLoading={isViewsLoading}
         selectedViewId={selectedViewId}
         isDefaultViewSelected={selectedViewId === DEFAULT_VIEW_ID}
         isBusy={isBusy}
@@ -362,14 +397,19 @@ export function AGGridTable<TRow extends object>({
             <Skeleton className="h-[580px] w-full" />
           </div>
         ) : null}
-        {isGridReady && isDataLoading ? (
-          <div className="pointer-events-none absolute inset-0 z-10 bg-background/70 p-4">
-            <div className="space-y-2">
-              <Skeleton className="h-8 w-40" />
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-[460px] w-full" />
+        {isGridReady && (isDataLoading || isBusy) ? (
+          <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-background/60">
+            <div className="flex items-center gap-2 rounded-md border bg-background px-3 py-2 text-sm text-muted-foreground shadow-sm">
+              <Loader2 className="size-4 animate-spin" />
+              {isBusy ? "Processing..." : "Loading data..."}
+            </div>
+          </div>
+        ) : null}
+        {isGridReady && !isBusy && !isDataLoading && !hasFirstDataRendered ? (
+          <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-background/60">
+            <div className="flex items-center gap-2 rounded-md border bg-background px-3 py-2 text-sm text-muted-foreground shadow-sm">
+              <Loader2 className="size-4 animate-spin" />
+              Rendering...
             </div>
           </div>
         ) : null}
@@ -377,7 +417,9 @@ export function AGGridTable<TRow extends object>({
           theme={themeAlpine}
           columnDefs={columnDefs}
           rowModelType="infinite"
-          cacheBlockSize={100}
+          cacheBlockSize={initialBlockSize}
+          blockLoadDebounceMillis={250}
+          maxConcurrentDatasourceRequests={1}
           maxBlocksInCache={5}
           defaultColDef={{
             sortable: true,
@@ -392,6 +434,7 @@ export function AGGridTable<TRow extends object>({
           onFilterChanged={syncDirtyState}
           onColumnPinned={syncDirtyState}
           onColumnResized={syncDirtyState}
+          onFirstDataRendered={() => setHasFirstDataRendered(true)}
         />
       </div>
     </div>

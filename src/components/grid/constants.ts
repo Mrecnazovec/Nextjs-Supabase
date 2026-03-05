@@ -1,0 +1,1 @@
+export const INITIAL_GRID_BLOCK_SIZE = 100;

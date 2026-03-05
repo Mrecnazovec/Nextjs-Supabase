@@ -3,9 +3,8 @@ import { OrdersPage } from "./OrdersPage";
 import { getOrdersGridData } from "@/services/orders/orders.service";
 import { OrdersSortFieldEnum } from "@/shared/enums/OrdersSortField.enum";
 import { SortDirectionEnum } from "@/shared/enums/SortDirection.enum";
+import { INITIAL_GRID_BLOCK_SIZE } from "@/components/grid/constants";
 import { connection } from "next/server";
-
-const INITIAL_BLOCK_SIZE = 100;
 
 export const metadata: Metadata = {
   title: "Orders",
@@ -17,7 +16,7 @@ export default async function OrdersRoutePage() {
 
   const initial = await getOrdersGridData({
     startRow: 0,
-    endRow: INITIAL_BLOCK_SIZE,
+    endRow: INITIAL_GRID_BLOCK_SIZE,
     sortBy: OrdersSortFieldEnum.ORDER_DATE,
     sortDirection: SortDirectionEnum.DESC,
     filterModel: {},
