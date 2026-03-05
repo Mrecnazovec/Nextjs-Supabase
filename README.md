@@ -1,60 +1,26 @@
-﻿# Next.js + Supabase AG-Grid Views Management System
+# Next.js + Supabase AG-Grid Views Management System
 
 ## Описание проекта
+Веб-приложение на Next.js для работы с таблицами `orders` и `invoices` через AG Grid.
+Авторизованный пользователь может создавать, загружать, обновлять и удалять свои сохраненные представления таблиц (views).
 
-Проект реализует систему управления табличными представлениями (views) для AG-Grid.
-Пользователь проходит авторизацию через Supabase, после чего может работать в защищенной зоне приложения.
+Основные возможности:
+- авторизация и регистрация через Supabase Auth (Email/Password + email confirmation);
+- защищенные страницы: `/dashboard`, `/orders`, `/invoices`;
+- server-side загрузка данных для AG Grid (sorting/filtering/pagination через API);
+- пользовательские views с сохранением состояния колонок, сортировки и фильтров;
+- ограничение доступа к views на уровне базы через Supabase RLS.
 
-Цель проекта:
-- использовать единый переиспользуемый подход для таблиц;
-- хранить пользовательские настройки представлений;
-- обеспечить серверную работу с данными (SSR/API);
-- ограничить доступ к пользовательским данным на уровне БД (RLS для `views`).
-
-## Используемые технологии
-
-- **Frontend**: Next.js 16 (App Router), React 19, TypeScript
-- **UI**: shadcn/ui, Tailwind CSS
-- **Forms**: react-hook-form, zod, @hookform/resolvers
-- **Data Grid**: AG Grid
-- **Auth**: Supabase Auth (Email/Password + email confirmation)
-- **Database**: Supabase Postgres
-- **ORM**: Prisma 7 (+ `@prisma/adapter-pg`)
-- **Cookies**: js-cookie
-- **HTTP**: axios
-
-## Текущая реализация
-
-- базовая auth-инфраструктура Supabase;
-- страница `/login` с `Sign In` и `Sign Up`;
-- подтверждение регистрации через `/api/register/confirm`;
-- защищенные маршруты через `proxy.ts`;
-- API endpoints:
-  - `/api/auth`
-  - `/api/dashboard`
-  - `/api/register/confirm`
-- Prisma schema + migrations + seed для `orders` и `invoices`;
-- заполнение тестовых данных из `data/orders.json` и `data/invoices.json`;
-- RLS policies для `views` через миграцию `prisma/migrations/20260305094000_add_views_rls/migration.sql`.
-
-Важно по RLS:
-- если runtime Prisma подключается ролью с `bypassrls` (например, `postgres`), policy может обходиться;
-- для strict-режима используйте `DATABASE_URL_RLS` с ролью без `bypassrls` (views-сервис в проекте использует его, если переменная задана).
-
-## Структура конфигов роутов
-
-- `src/config/url.config.ts` — page URLs
-- `src/config/api.config.ts` — API URLs
-
-## Требования
-
-- Node.js 20+
-- npm 10+
-- доступ к Supabase проекту
+## Технологии
+- Next.js 16 (App Router), React 19, TypeScript
+- Supabase (Auth + Postgres)
+- Prisma ORM 7 (`@prisma/client`, `@prisma/adapter-pg`)
+- AG Grid
+- shadcn/ui, Tailwind CSS
+- react-hook-form, zod
 
 ## Переменные окружения
-
-Пример `.env`:
+Создайте `.env` и заполните минимум:
 
 ```env
 APP_ENV=development
@@ -66,38 +32,46 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY=...
 
 DATABASE_URL=...      # pooled/runtime
 DIRECT_URL=...        # direct/migrations
-DATABASE_URL_RLS=...  # optional: runtime URL with role without bypassrls (for views RLS)
+DATABASE_URL_RLS=...  # optional: runtime URL без bypassrls для строгого RLS в views
 ```
 
-## Установка и запуск
-
+## Запуск проекта
+1. Установить зависимости:
 ```bash
 npm install
+```
+
+2. Сгенерировать Prisma Client:
+```bash
 npm run prisma:generate
+```
+
+3. Применить миграции:
+```bash
 npm run prisma:migrate -- --name init
+```
+
+4. Заполнить тестовые данные:
+```bash
 npm run prisma:seed
+```
+
+5. Запустить dev-сервер:
+```bash
 npm run dev
 ```
 
-Открыть: `http://localhost:3000`
+Приложение будет доступно на `http://localhost:3000`.
 
-## Проверка качества
-
+## Полезные команды
 ```bash
 npm run lint
 npm run build
 ```
 
-## Настройки Supabase Auth
-
+## Настройка Supabase Auth
 В Supabase Dashboard:
-- `Authentication -> Providers -> Email`: включить Email provider и Confirm email.
+- `Authentication -> Sign In / Providers -> Email`: включить Email provider и Confirm email;
 - `Authentication -> URL Configuration`:
   - Site URL: `http://localhost:3000`
   - Redirect URL: `http://localhost:3000/api/register/confirm`
-
-## Ближайшие шаги
-
-- реализовать generic `AGGridTable`;
-- добавить серверные API для AG-Grid sorting/filtering/pagination;
-- подключить страницы `/orders` и `/invoices` к реальным grid-данным.
