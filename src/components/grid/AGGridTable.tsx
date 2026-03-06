@@ -421,11 +421,14 @@ export function AGGridTable<TRow extends object>({
           blockLoadDebounceMillis={250}
           maxConcurrentDatasourceRequests={1}
           maxBlocksInCache={5}
+          maintainColumnOrder
+          suppressDragLeaveHidesColumns
           defaultColDef={{
             sortable: true,
             filter: true,
             resizable: true,
             floatingFilter: true,
+            suppressMovable: false,
           }}
           onGridReady={onGridReady}
           onColumnMoved={syncDirtyState}

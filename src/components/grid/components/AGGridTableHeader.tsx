@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CopyPlus, Loader2, RotateCcw, Save, Trash2 } from "lucide-react";
+import { CircleHelp, CopyPlus, Loader2, RotateCcw, Save, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -66,7 +66,25 @@ export function AGGridTableHeader({
     <>
       <div className="space-y-3">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-xl font-semibold">{title}</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-xl font-semibold">{title}</h2>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    className="inline-flex size-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                    aria-label="Grid usage hint"
+                  >
+                    <CircleHelp className="size-4" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  Drag column headers to reorder them. Save the view to persist the new order.
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
           {isDirty ? <Badge variant="destructive">Unsaved changes</Badge> : null}
         </div>
         <div className="flex flex-wrap items-center justify-between gap-3">
